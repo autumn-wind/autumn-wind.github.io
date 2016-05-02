@@ -94,7 +94,7 @@
 以下进入正文：
 
 这是关于“调试器原理系列文章”的第一篇，我目前还不确定这个系列最终会包含多少篇文章，但我准备从最基础的东西讲起。">
-<meta property="og:updated_time" content="2016-05-02T14:42:49.000Z">
+<meta property="og:updated_time" content="2016-05-02T14:47:37.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="调试器工作原理：Part 1 － 基础">
 <meta name="twitter:description" content="这篇文章基本上是国外一篇博客的翻译，部分地方做了一定删改。
@@ -260,7 +260,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-02T22:42:49+08:00" content="2016-05-02">
+            <time itemprop="dateCreated" datetime="2016-05-02T22:47:37+08:00" content="2016-05-02">
               2016-05-02
             </time>
           </span>
@@ -325,7 +325,7 @@
 <p>注意到<em>icounter</em>会记录子进程执行的指令条数。所以我们的简单示例程序其实做了一件很有意义的事情——通过命令行传入一个程序的名字，它会执行这个程序，并且统计这个程序从开始到结束一共执行的机器指令的条数。让我们通过实战来看看吧。</p>
 <h3 id="一个测试的运行"><a href="#一个测试的运行" class="headerlink" title="一个测试的运行"></a>一个测试的运行</h3><p>我编译了如下的简单程序，然后让它被调试器运行。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Hello, world!\n"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>令我惊讶的是，调试器花了很长的时间完成执行并且打印显示上面的这个简单程序执行了超过10,000条指令。仅仅是一个<em>printf</em>调用？为什么会这样？答案是很有趣的。默认情况下，Linux上gcc会将程序动态地链接C运行时库。这意味着当任何C程序开始运行时，首先动态库的加载器会去寻找需要的共享库。这将会是非常多的代码－－然后请记住我们的简易调试器会统计子进程执行的每一条指令，而不仅仅是<em>main</em>函数中所执行的指令。</p>
+<p>令我惊讶的是，调试器花了很长的时间完成执行并且打印显示上面的这个简单程序执行了超过100,000条指令。仅仅是一个<em>printf</em>调用？为什么会这样？答案是很有趣的。默认情况下，Linux上gcc会将程序动态地链接C运行时库。这意味着当任何C程序开始运行时，首先动态库的加载器会去寻找需要的共享库。这将会是非常多的代码－－然后请记住我们的简易调试器会统计子进程执行的每一条指令，而不仅仅是<em>main</em>函数中所执行的指令。</p>
 <p>于是，当我用<em>-static</em>选项链接测试程序（相应的可执行文件的大小增加了500KB，这对于一个C运行时库的静态链接来说是合理的），打印结果显示一共仅执行了大约7,000条指令。这还是有点多，但是也确实合乎情理，如果你意识到在<em>main</em>函数执行前后libc要做一些初始化和回收工作。并且，<em>printf</em>也是一个复杂的函数。</p>
 <p>仍然不满意，我想要的是可以测试并验证的东西——比如，我事先知道在一个程序运行一次需要执行多少条指令。怎么做到呢？显然，使用汇编代码就能解决这个问题。于是我使用了下面这个汇编版本的“Hello world”程序，并且对它进行了汇编和链接：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">section    .text</span><br><span class="line">    ; The _start symbol must be declared for the linker (ld)</span><br><span class="line">    global _start</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line"></span><br><span class="line">    ; Prepare arguments for the sys_write system call:</span><br><span class="line">    ;   - eax: system call number (sys_write)</span><br><span class="line">    ;   - ebx: file descriptor (stdout)</span><br><span class="line">    ;   - ecx: pointer to string</span><br><span class="line">    ;   - edx: string length</span><br><span class="line">    mov    edx, len</span><br><span class="line">    mov    ecx, msg</span><br><span class="line">    mov    ebx, 1</span><br><span class="line">    mov    eax, 4</span><br><span class="line"></span><br><span class="line">    ; Execute the sys_write system call</span><br><span class="line">    int    0x80</span><br><span class="line"></span><br><span class="line">    ; Execute sys_exit</span><br><span class="line">    mov    eax, 1</span><br><span class="line">    int    0x80</span><br><span class="line"></span><br><span class="line">section   .data</span><br><span class="line">msg db    &apos;Hello, world!&apos;, 0xa</span><br><span class="line">len equ    $ - msg</span><br></pre></td></tr></table></figure>
