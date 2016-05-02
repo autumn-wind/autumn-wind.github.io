@@ -1,0 +1,640 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="这篇文章基本上是国外一篇博客的翻译，部分地方做了一定删改。
+原文链接：http://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/
+以下进入正文：
+
+这是关于“调试器原理系列文章”的第一篇，我目前还不确定这个系列最终会包含多少篇文章，但我准备从最基础的东西讲起。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="调试器工作原理：Part 1 － 基础">
+<meta property="og:url" content="http://yoursite.com/2016/05/02/how-debugger-works-part-1-basics/index.html">
+<meta property="og:site_name" content="归去来兮">
+<meta property="og:description" content="这篇文章基本上是国外一篇博客的翻译，部分地方做了一定删改。
+原文链接：http://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/
+以下进入正文：
+
+这是关于“调试器原理系列文章”的第一篇，我目前还不确定这个系列最终会包含多少篇文章，但我准备从最基础的东西讲起。">
+<meta property="og:updated_time" content="2016-05-02T14:42:49.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="调试器工作原理：Part 1 － 基础">
+<meta name="twitter:description" content="这篇文章基本上是国外一篇博客的翻译，部分地方做了一定删改。
+原文链接：http://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/
+以下进入正文：
+
+这是关于“调试器原理系列文章”的第一篇，我目前还不确定这个系列最终会包含多少篇文章，但我准备从最基础的东西讲起。">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> 调试器工作原理：Part 1 － 基础 | 归去来兮 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-76815926-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">归去来兮</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">悟已往之不谏，知来者之可追</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                调试器工作原理：Part 1 － 基础
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-02T22:42:49+08:00" content="2016-05-02">
+              2016-05-02
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/05/02/how-debugger-works-part-1-basics/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/02/how-debugger-works-part-1-basics/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>这篇文章基本上是国外一篇博客的翻译，部分地方做了一定删改。</p>
+<p>原文链接：<a href="http://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/" target="_blank" rel="external">http://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/</a></p>
+<p>以下进入正文：</p>
+<hr>
+<p>这是关于<a href="http://eli.thegreenplace.net/tag/debuggers" target="_blank" rel="external">“调试器原理系列文章”</a>的第一篇，我目前还不确定这个系列最终会包含多少篇文章，但我准备从最基础的东西讲起。</p>
+<a id="more"></a>
+<h3 id="在这一篇中"><a href="#在这一篇中" class="headerlink" title="在这一篇中"></a>在这一篇中</h3><p>我准备向大家介绍在Linux上实现调试器所用到的最重要的工具——<em>ptrace</em>系统调用。这篇文章中包含的所有代码都是在32位的Ubuntu机器上编写的。需要注意的是，这些代码是非常平台相关的，不过如果要将它们移植到其它平台上应该也不会是一件太难的事。</p>
+<h3 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h3><p>为了认识到我们正在做什么，请尝试着想一想调试器需要拥有哪些功能才能完成它的工作。一个调试器可以运行某个程序并且对它进行调试，或者连接到一个正在运行的进程并对它进行调试。它能单步执行，设置断点并且在断点处“停住”程序，查看变量的值以及栈的信息。很多高级的调试器甚至能动态的修改被调试程序的代码并观察运行效果。</p>
+<p>即使现代的调试器是非常复杂的“野兽”，令人惊讶的是它赖以实现的根基竟然非常简单。调试器能完成许多复杂的工作，关键是靠少量的由操作系统和编译器／链接器提供的基本服务，剩下的就只是一些<a href="https://en.wikipedia.org/wiki/Small_matter_of_programming" target="_blank" rel="external">Small matter of programming</a>。（注意这里是反讽）</p>
+<h3 id="Linux调试－ptrace"><a href="#Linux调试－ptrace" class="headerlink" title="Linux调试－ptrace"></a>Linux调试－<em>ptrace</em></h3><p>对于Linux调试器，它的瑞士军刀就是<em>ptrace</em>系统调用（使用 <em>man 2 ptrace</em> 看看它的具体信息吧）。它是一个多功能且复杂的工具，它可以用来让一个进程控制另一个进程的执行，并且能查看甚至修改被监控进程的内存。单单是<em>ptrace</em>就能用一本中等厚度的书来叙述了，这也是为什么我将仅仅关注几个它对于调试器来说特别实用的功能，并且配上具体的例子加以解释。</p>
+<p>让我们这就开始吧！</p>
+<h3 id="单步调试一个进程"><a href="#单步调试一个进程" class="headerlink" title="单步调试一个进程"></a>单步调试一个进程</h3><p>我准备了一个具体的例子，在这个例子中我们将使一个程序运行在“被跟踪”模式，然后我们将对这个程序的代码进行单步调试，注意这里的代码指的是程序在CPU上运行的一条一条指令对应的机器码（汇编代码）。我会分部分展示这个例子，分别进行解释，然后在文章的最后你会找到一个链接，从那里你可以下载所有相关的C语言代码来编译、运行和把玩。</p>
+<p>高层的目标是编写这样一个程序，运行后它的子进程会执行一个新的程序并把自己设为“被跟踪”模式，而父进程则会去跟踪这个子进程。首先，main函数如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> child_pid;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (argc &lt; <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"Expected a program name as argument\n"</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    child_pid = fork();</span><br><span class="line">    <span class="keyword">if</span> (child_pid == <span class="number">0</span>)</span><br><span class="line">        run_target(argv[<span class="number">1</span>]);</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (child_pid &gt; <span class="number">0</span>)</span><br><span class="line">        run_debugger(child_pid);</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        perror(<span class="string">"fork"</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>非常简单，不是吗？我们使用<em>fork</em>系统调用创建了一个新的子进程。满足<em>if</em>语句分支的情况会创建一个子进程（在这里称作“target”），<em>else if</em>语句分支则运行父进程（在这里称作“debugger”）。</p>
+<p>下面是target进程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">run_target</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* programname)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    procmsg(<span class="string">"target started. will run '%s'\n"</span>, programname);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Allow tracing of this process */</span></span><br><span class="line">    <span class="keyword">if</span> (ptrace(PTRACE_TRACEME, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">"ptrace"</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Replace this process's image with the given program */</span></span><br><span class="line">    execl(programname, programname, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里最有趣的一行便是<em>ptrace</em>系统调用。<em>ptrace</em>的声明如下：（在<em>sys/ptrace.h</em>中）：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">long</span> <span class="title">ptrace</span><span class="params">(<span class="keyword">enum</span> __ptrace_request request, pid_t pid,</span><br><span class="line">		                 <span class="keyword">void</span> *addr, <span class="keyword">void</span> *data)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>第一个参数是<em>request</em>，它可能是许多预先定义好的<em>PTRACE_</em>*类型的常量。第二个参数通常指出了指出了被调试进程的进程号。第三个参数和第四个参数是一个地址或数据的指针，它们被用来进行内存相关的操作。在上面这个代码片段中<em>ptrace</em>发出了<strong>PTRACE_TRACEME</strong>的<em>request</em>，这意味这个进程请求操作系统让它的父进程对它进行跟踪。这个<em>request</em>在man手册中描述的非常清楚：</p>
+<blockquote>
+<p>Indicates that this process is to be traced by its parent. Any signal (except SIGKILL) delivered to this process will cause it to stop and its parent to be notified via wait(). <strong>Also, all subsequent calls to exec() by this process will cause a SIGTRAP to be sent to it, giving the parent a chance to gain control before the new program begins execution.</strong> A process probably shouldn’t make this request if its parent isn’t expecting to trace it. (pid, addr, and data are ignored.)</p>
+</blockquote>
+<p>我已经突出显示了在这个例子中，man手册中能让我们重点引起兴趣的一句话。注意到子进程在进行<em>ptrace</em>系统调用后，马上会使用命令行传来的一个参数，来执行<em>execl</em>系统调用，这将会使子进程运行这个参数对应的一个新的程序。于是，正如上文引用中所突出显示的，这会让操作系统在子进程通过<em>execl</em>执行新的程序前先挂起子进程，然后给父进程发送一个信号。</p>
+<p>终于，是时候看看父进程干了些什么了：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">run_debugger</span><span class="params">(pid_t child_pid)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> wait_status;</span><br><span class="line">    <span class="keyword">unsigned</span> icounter = <span class="number">0</span>;</span><br><span class="line">    procmsg(<span class="string">"debugger started\n"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Wait for child to stop on its first instruction */</span></span><br><span class="line">    wait(&amp;wait_status);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (WIFSTOPPED(wait_status)) &#123;</span><br><span class="line">        icounter++;</span><br><span class="line">        <span class="comment">/* Make the child execute another instruction */</span></span><br><span class="line">        <span class="keyword">if</span> (ptrace(PTRACE_SINGLESTEP, child_pid, <span class="number">0</span>, <span class="number">0</span>) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            perror(<span class="string">"ptrace"</span>);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Wait for child to stop on its next instruction */</span></span><br><span class="line">        wait(&amp;wait_status);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    procmsg(<span class="string">"the child executed %u instructions\n"</span>, icounter);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>回忆上文提到的，一旦子进程开始执行<em>exec</em>类型的系统调用，它会被操作系统停住并且被发送一个<strong>SIGTRAP</strong>信号。父进程使用第一个<em>wait</em>系统调用等待这件事情的发生。一旦某些有趣的事情发生了，<em>wait</em>会马上返回，然后父进程会检查是否是子进程被挂起了（如果子进程因为被发送了一个信号而挂起了，<strong>WIFSTOPPED</strong>会返回true）。</p>
+<p>父进程接下来做的将是这篇文章最精彩的部分。它会使用<strong>PTRACE_SINGLESTEP</strong>以及子进程号作为参数调用<em>ptrace</em>。这么做的效果是告诉操作系统——请重新运行子进程，但是当子进程执行一条指令后就再次将它挂起。再次地，父进程会通过<em>wait</em>等待子进程被挂起，循环也会继续。当父进程通过<em>wait</em>得知的信号并不是子进程被挂起，循环会终止。在子进程正常运行的情况下，这将会是一个信号，它告诉父进程子进程已经执行结束正常退出了（这种情况下<strong>WIFEXISTED</strong>会返回true）。</p>
+<p>注意到<em>icounter</em>会记录子进程执行的指令条数。所以我们的简单示例程序其实做了一件很有意义的事情——通过命令行传入一个程序的名字，它会执行这个程序，并且统计这个程序从开始到结束一共执行的机器指令的条数。让我们通过实战来看看吧。</p>
+<h3 id="一个测试的运行"><a href="#一个测试的运行" class="headerlink" title="一个测试的运行"></a>一个测试的运行</h3><p>我编译了如下的简单程序，然后让它被调试器运行。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Hello, world!\n"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>令我惊讶的是，调试器花了很长的时间完成执行并且打印显示上面的这个简单程序执行了超过10,000条指令。仅仅是一个<em>printf</em>调用？为什么会这样？答案是很有趣的。默认情况下，Linux上gcc会将程序动态地链接C运行时库。这意味着当任何C程序开始运行时，首先动态库的加载器会去寻找需要的共享库。这将会是非常多的代码－－然后请记住我们的简易调试器会统计子进程执行的每一条指令，而不仅仅是<em>main</em>函数中所执行的指令。</p>
+<p>于是，当我用<em>-static</em>选项链接测试程序（相应的可执行文件的大小增加了500KB，这对于一个C运行时库的静态链接来说是合理的），打印结果显示一共仅执行了大约7,000条指令。这还是有点多，但是也确实合乎情理，如果你意识到在<em>main</em>函数执行前后libc要做一些初始化和回收工作。并且，<em>printf</em>也是一个复杂的函数。</p>
+<p>仍然不满意，我想要的是可以测试并验证的东西——比如，我事先知道在一个程序运行一次需要执行多少条指令。怎么做到呢？显然，使用汇编代码就能解决这个问题。于是我使用了下面这个汇编版本的“Hello world”程序，并且对它进行了汇编和链接：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">section    .text</span><br><span class="line">    ; The _start symbol must be declared for the linker (ld)</span><br><span class="line">    global _start</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line"></span><br><span class="line">    ; Prepare arguments for the sys_write system call:</span><br><span class="line">    ;   - eax: system call number (sys_write)</span><br><span class="line">    ;   - ebx: file descriptor (stdout)</span><br><span class="line">    ;   - ecx: pointer to string</span><br><span class="line">    ;   - edx: string length</span><br><span class="line">    mov    edx, len</span><br><span class="line">    mov    ecx, msg</span><br><span class="line">    mov    ebx, 1</span><br><span class="line">    mov    eax, 4</span><br><span class="line"></span><br><span class="line">    ; Execute the sys_write system call</span><br><span class="line">    int    0x80</span><br><span class="line"></span><br><span class="line">    ; Execute sys_exit</span><br><span class="line">    mov    eax, 1</span><br><span class="line">    int    0x80</span><br><span class="line"></span><br><span class="line">section   .data</span><br><span class="line">msg db    &apos;Hello, world!&apos;, 0xa</span><br><span class="line">len equ    $ - msg</span><br></pre></td></tr></table></figure>
+<p>足够了。现在简易调试器打印显示正好7条指令被执行了，这恰好与上述的汇编代码是吻合的。</p>
+<h3 id="深入到执行流中"><a href="#深入到执行流中" class="headerlink" title="深入到执行流中"></a>深入到执行流中</h3><p>这个汇编程序允许我为你介绍<em>ptrace</em>另一个非常强大的功能——密切的监视被调试进程的状态，无论是寄存器还是内存。下面是run_debugger的另一个版本：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">run_debugger</span><span class="params">(pid_t child_pid)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> wait_status;</span><br><span class="line">    <span class="keyword">unsigned</span> icounter = <span class="number">0</span>;</span><br><span class="line">    procmsg(<span class="string">"debugger started\n"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Wait for child to stop on its first instruction */</span></span><br><span class="line">    wait(&amp;wait_status);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (WIFSTOPPED(wait_status)) &#123;</span><br><span class="line">        icounter++;</span><br><span class="line">        <span class="keyword">struct</span> user_regs_struct regs;</span><br><span class="line">        ptrace(PTRACE_GETREGS, child_pid, <span class="number">0</span>, &amp;regs);</span><br><span class="line">        <span class="keyword">unsigned</span> instr = ptrace(PTRACE_PEEKTEXT, child_pid, regs.eip, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        procmsg(<span class="string">"icounter = %u.  EIP = 0x%08x.  instr = 0x%08x\n"</span>,</span><br><span class="line">                    icounter, regs.eip, instr);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Make the child execute another instruction */</span></span><br><span class="line">        <span class="keyword">if</span> (ptrace(PTRACE_SINGLESTEP, child_pid, <span class="number">0</span>, <span class="number">0</span>) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            perror(<span class="string">"ptrace"</span>);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Wait for child to stop on its next instruction */</span></span><br><span class="line">        wait(&amp;wait_status);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    procmsg(<span class="string">"the child executed %u instructions\n"</span>, icounter);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>与之前的那个run_debugger版本相比，仅有的一些不同在于while循环中的前面几行代码。现在两个新的<em>ptrace</em>调用。第一个将被跟踪进程的寄存器内容读入到一个结构体中。<em>user_regs_struct</em>在<em>sys/user.h</em>被定义。下面是一个有趣的部分——如果你去查看了这个头文件，你会在靠近顶部的位置看到下面这段注释：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* The whole purpose of this file is for GDB and GDB only.</span><br><span class="line">   Don't read too much into it. Don't use it for</span><br><span class="line">   anything other than GDB unless know what you are</span><br><span class="line">   doing.  */</span></span><br></pre></td></tr></table></figure>
+<p>现在，我并不知道你是怎么想的，但是我感到我们正行驶在正确的轨道上;-) 好吧，不论怎样，让我们先回到例子上来。一旦我们将被调试进程的所有寄存器的值放入到<em>regs</em>中，我们便能通过使用<strong>PTRACE_PEEKTEXT</strong>参数调用<em>ptrace</em>，同时传入<em>regs.eip</em>（x86上的扩展的指令指示器）作为地址值参数。我们通过<em>ptrace</em>得到的将是指令的机器码。现在让我们来看看这个新版本的调试器运行我们的汇编代码的效果：<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ simple_tracer traced_helloworld</span><br><span class="line">[5700] debugger started</span><br><span class="line">[5701] target started. will run 'traced_helloworld'</span><br><span class="line">[5700] icounter = 1.  EIP = 0x08048080.  instr = 0x00000eba</span><br><span class="line">[5700] icounter = 2.  EIP = 0x08048085.  instr = 0x0490a0b9</span><br><span class="line">[5700] icounter = 3.  EIP = 0x0804808a.  instr = 0x000001bb</span><br><span class="line">[5700] icounter = 4.  EIP = 0x0804808f.  instr = 0x000004b8</span><br><span class="line">[5700] icounter = 5.  EIP = 0x08048094.  instr = 0x01b880cd</span><br><span class="line">Hello, world!</span><br><span class="line">[5700] icounter = 6.  EIP = 0x08048096.  instr = 0x000001b8</span><br><span class="line">[5700] icounter = 7.  EIP = 0x0804809b.  instr = 0x000080cd</span><br><span class="line">[5700] the child executed 7 instructions</span><br></pre></td></tr></table></figure></p>
+<p>好的，现在除了<em>icounter</em>之外，我们还能看到指令指示器的值以及每步执行中它对应的机器码。怎么证实它是正确的呢？通过对可执行文件执行<em>objdump -d</em>即可：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ objdump -d traced_helloworld</span><br><span class="line"></span><br><span class="line">traced_helloworld:     file format elf32-i386</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Disassembly of section .text:</span><br><span class="line"></span><br><span class="line">08048080 &lt;.text&gt;:</span><br><span class="line"> 8048080:     ba 0e 00 00 00          mov    $0xe,%edx</span><br><span class="line"> 8048085:     b9 a0 90 04 08          mov    $0x80490a0,%ecx</span><br><span class="line"> 804808a:     bb 01 00 00 00          mov    $0x1,%ebx</span><br><span class="line"> 804808f:     b8 04 00 00 00          mov    $0x4,%eax</span><br><span class="line"> 8048094:     cd 80                   int    $0x80</span><br><span class="line"> 8048096:     b8 01 00 00 00          mov    $0x1,%eax</span><br><span class="line"> 804809b:     cd 80                   int    $0x80</span><br></pre></td></tr></table></figure>
+<p> 这里的反汇编和我们简易调试器的打印结果之间的相关性是很容易发现的。</p>
+<h3 id="连接到一个运行中的进程"><a href="#连接到一个运行中的进程" class="headerlink" title="连接到一个运行中的进程"></a>连接到一个运行中的进程</h3><p> 正如你所知道的，调试器可以连接到一个正在运行中的进程。现在你应该不会对这也是通过<em>ptrace</em>做到的感到惊奇，确实这也是通过给<em>ptrace</em>发送<strong>PTRACE_ATTACH</strong>请求做到的。在这里我不会再给出代码，因为通过适当地修改我们已经实现的代码它是很容易做到的。由于教学目的，这里采取的方式更为直接、便于理解（由于我们能在子进程开始运行新的程序前就将它停住）。</p>
+<h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><p> 这篇文章中的简易调试器的完整代码（更高级的那个可以打印机器码的版本）在<a href="https://github.com/eliben/code-for-blog/blob/master/2011/simple_tracer.c" target="_blank" rel="external">这里</a>。在gcc 4.4上使用 <em>-Wall -pedantic –std=c99</em> 便能顺利完成编译。</p>
+<h3 id="结论和下一步"><a href="#结论和下一步" class="headerlink" title="结论和下一步"></a>结论和下一步</h3><p> 必须承认的是，这篇文章并没有包含太多的东西——我们离一个真正的调试器还有很远的距离。然而，我希望它至少让调试一个程序的过程变得不再那么神秘。<em>ptrace</em>确实是一个有非常多的功能的系统调用，我们只是对其中的几个功能进行了举例阐述。</p>
+<p> 单步调试是有用的，但是只是到一定程度上。用上面的C代码“Hello world”举个例子，如果要通过单步调试的话，那到达<em>main</em>函数恐怕得需要经过几千次指令的调试过程。这是非常不方便的（痛苦的）。我们理想中想要的是能在<em>main</em>函数开始的地方设置一个断点，然后直接运行到那里然后停住。好吧，在这个系列的下一篇文章中，我会来讲讲断点是如何实现的。</p>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p>我发现下面的几篇文章对阅读我的这篇文章可以起到一定的准备作用：</p>
+<ul>
+<li><a href="http://www.linuxjournal.com/article/6100?page=0,1" target="_blank" rel="external">Playing with ptrace, Part I</a></li>
+<li><a href="http://www.alexonlinux.com/how-debugger-works" target="_blank" rel="external">How debugger works</a></li>
+</ul>
+
+      
+    </div>
+    
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/05/02/how-debugger-works-part-1-basics/"
+           data-title="调试器工作原理：Part 1 － 基础" data-url="http://yoursite.com/2016/05/02/how-debugger-works-part-1-basics/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.png"
+               alt="Autumn Wind" />
+          <p class="site-author-name" itemprop="name">Autumn Wind</p>
+          <p class="site-description motion-element" itemprop="description">Hapiness is real only when shared.</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">1</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#在这一篇中"><span class="nav-number">1.</span> <span class="nav-text">在这一篇中</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动机"><span class="nav-number">2.</span> <span class="nav-text">动机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux调试－ptrace"><span class="nav-number">3.</span> <span class="nav-text">Linux调试－ptrace</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#单步调试一个进程"><span class="nav-number">4.</span> <span class="nav-text">单步调试一个进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一个测试的运行"><span class="nav-number">5.</span> <span class="nav-text">一个测试的运行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#深入到执行流中"><span class="nav-number">6.</span> <span class="nav-text">深入到执行流中</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#连接到一个运行中的进程"><span class="nav-number">7.</span> <span class="nav-text">连接到一个运行中的进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码"><span class="nav-number">8.</span> <span class="nav-text">代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结论和下一步"><span class="nav-number">9.</span> <span class="nav-text">结论和下一步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考文章"><span class="nav-number">10.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Autumn Wind</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"autumn-wind"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>
