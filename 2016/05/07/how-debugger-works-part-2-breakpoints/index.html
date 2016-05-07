@@ -86,7 +86,7 @@
 
 这是关于“调试器原理系列文章”的第二篇。确保你在阅读这一篇前阅读过前一篇。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="调试器工作原理：Part 1 － 基础">
+<meta property="og:title" content="调试器工作原理：Part 2 － 断点">
 <meta property="og:url" content="http://yoursite.com/2016/05/07/how-debugger-works-part-2-breakpoints/index.html">
 <meta property="og:site_name" content="归去来兮">
 <meta property="og:description" content="这篇文章基本上是国外一篇博客的翻译，部分地方做了一定删改。
@@ -94,9 +94,9 @@
 以下进入正文：
 
 这是关于“调试器原理系列文章”的第二篇。确保你在阅读这一篇前阅读过前一篇。">
-<meta property="og:updated_time" content="2016-05-07T14:11:57.000Z">
+<meta property="og:updated_time" content="2016-05-07T15:25:17.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="调试器工作原理：Part 1 － 基础">
+<meta name="twitter:title" content="调试器工作原理：Part 2 － 断点">
 <meta name="twitter:description" content="这篇文章基本上是国外一篇博客的翻译，部分地方做了一定删改。
 原文链接：http://eli.thegreenplace.net/2011/01/27/how-debuggers-work-part-2-breakpoints
 以下进入正文：
@@ -119,7 +119,7 @@
   };
 </script>
 
-  <title> 调试器工作原理：Part 1 － 基础 | 归去来兮 </title>
+  <title> 调试器工作原理：Part 2 － 断点 | 归去来兮 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -248,7 +248,7 @@
             
             
               
-                调试器工作原理：Part 1 － 基础
+                调试器工作原理：Part 2 － 断点
               
             
           </h1>
@@ -260,7 +260,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-07T22:11:57+08:00" content="2016-05-07">
+            <time itemprop="dateCreated" datetime="2016-05-07T23:25:17+08:00" content="2016-05-07">
               2016-05-07
             </time>
           </span>
@@ -330,7 +330,7 @@
 <li>允许用户这个时候获取被调试进程的相关信息。因为这个时候被调试进程已经是执行到目标地址处被挂起，所以这个时候调试器可以让你去查看被调试进程的变量，寄存器，栈信息等。</li>
 <li>当用户想要继续运行的话，调试器会小心将断点放回去（因为在第一步中断点已经被移除），然后继续执行后面的指令，除非用户要求调试器删掉那个断点。</li>
 </ol>
-<p>现在让我们来看看上述步骤是如何被翻译成具体代码的。我们将用到在上一篇文章中用到的调试器代码片段（fork一个子进程然后对它进行跟踪）。在这篇文章的最后，你同样会找到一个包含这篇文章中所有代码的链接。</p>
+<p>现在让我们来看看上述步骤是如何被翻译成具体代码的。我们将用到在上一篇文章中用到的调试器代码片段（父进程fork一个子进程然后对它进行跟踪）。在这篇文章的最后，你同样会找到一个包含这篇文章中所有代码的链接。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Obtain and show child's instruction pointer */</span></span><br><span class="line">ptrace(PTRACE_GETREGS, child_pid, <span class="number">0</span>, &amp;regs);</span><br><span class="line">procmsg(<span class="string">"Child started. EIP = 0x%08x\n"</span>, regs.eip);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Look at the word at the address we're interested in */</span></span><br><span class="line"><span class="keyword">unsigned</span> addr = <span class="number">0x8048096</span>;</span><br><span class="line"><span class="keyword">unsigned</span> data = ptrace(PTRACE_PEEKTEXT, child_pid, (<span class="keyword">void</span>*)addr, <span class="number">0</span>);</span><br><span class="line">procmsg(<span class="string">"Original data at 0x%08x: 0x%08x\n"</span>, addr, data);</span><br></pre></td></tr></table></figure>
 <p>这是调试器从被调试进程中获取它现在的 <em>$eip</em> 的值，以及0x8048096处指令的值。当运行调试器跟踪本篇文章之前展示的汇编代码时，终端上会打印：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[13028] Child started. EIP = 0x08048080</span><br><span class="line">[13028] Original data at 0x08048096: 0x000007ba</span><br></pre></td></tr></table></figure>
@@ -338,14 +338,26 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Write the trap instruction 'int 3' into the address */</span></span><br><span class="line"><span class="keyword">unsigned</span> data_with_trap = (data &amp; <span class="number">0xFFFFFF00</span>) | <span class="number">0xCC</span>;</span><br><span class="line">ptrace(PTRACE_POKETEXT, child_pid, (<span class="keyword">void</span>*)addr, (<span class="keyword">void</span>*)data_with_trap);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* See what's there again... */</span></span><br><span class="line"><span class="keyword">unsigned</span> readback_data = ptrace(PTRACE_PEEKTEXT, child_pid, (<span class="keyword">void</span>*)addr, <span class="number">0</span>);</span><br><span class="line">procmsg(<span class="string">"After trap, data at 0x%08x: 0x%08x\n"</span>, addr, readback_data);</span><br></pre></td></tr></table></figure>
 <p>请注意 <em>int 3</em> 是如何被插入到目标地址的。这个过程将在终端上打印：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[13028] After trap, data at 0x08048096: 0x000007cc</span><br></pre></td></tr></table></figure>
-<h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><p> 这篇文章中的简易调试器的完整代码（更高级的那个可以打印机器码的版本）在<a href="https://github.com/eliben/code-for-blog/blob/master/2011/simple_tracer.c" target="_blank" rel="external">这里</a>。在gcc 4.4上使用 <em>-Wall -pedantic –std=c99</em> 便能顺利完成编译。</p>
-<h3 id="结论和下一步"><a href="#结论和下一步" class="headerlink" title="结论和下一步"></a>结论和下一步</h3><p> 必须承认的是，这篇文章并没有包含太多的东西——我们离一个真正的调试器还有很远的距离。然而，我希望它至少让调试一个程序的过程变得不再那么神秘。<em>ptrace</em>确实是一个有非常多的功能的系统调用，我们只是对其中的几个功能进行了举例阐述。</p>
-<p> 单步调试是有用的，但是只是到一定程度上。用上面的C代码“Hello world”举个例子，如果要通过单步调试的话，那到达<em>main</em>函数恐怕得需要经过几千次指令的调试过程。这是非常不方便的（痛苦的）。我们理想中想要的是能在<em>main</em>函数开始的地方设置一个断点，然后直接运行到那里然后停住。好吧，在这个系列的下一篇文章中，我会来讲讲断点是如何实现的。</p>
-<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p>我发现下面的几篇文章对阅读我的这篇文章可以起到一定的准备作用：</p>
-<ul>
-<li><a href="http://www.linuxjournal.com/article/6100?page=0,1" target="_blank" rel="external">Playing with ptrace, Part I</a></li>
-<li><a href="http://www.alexonlinux.com/how-debugger-works" target="_blank" rel="external">How debugger works</a></li>
-</ul>
+<p>同样，正如预期的那样—— <em>0xba</em> 被替换成了 <em>0xcc</em>。调试器现在将运行被调试的进程，并且等待它在断点处被挂起：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Let the child run to the breakpoint and wait for it to</span><br><span class="line">** reach it</span><br><span class="line">*/</span></span><br><span class="line">ptrace(PTRACE_CONT, child_pid, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">wait(&amp;wait_status);</span><br><span class="line"><span class="keyword">if</span> (WIFSTOPPED(wait_status)) &#123;</span><br><span class="line">    procmsg(<span class="string">"Child got a signal: %s\n"</span>, strsignal(WSTOPSIG(wait_status)));</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line">    perror(<span class="string">"wait"</span>);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* See where the child is now */</span></span><br><span class="line">ptrace(PTRACE_GETREGS, child_pid, <span class="number">0</span>, &amp;regs);</span><br><span class="line">procmsg(<span class="string">"Child stopped at EIP = 0x%08x\n"</span>, regs.eip);</span><br></pre></td></tr></table></figure>
+<p>这个过程会打印：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Hello,</span><br><span class="line">[13028] Child got a signal: Trace/breakpoint trap</span><br><span class="line">[13028] Child stopped at EIP = 0x08048097</span><br></pre></td></tr></table></figure>
+<p>注意到“Hello，”是在断点前被打印出来——这正如我们所预期的那样。同样请注意子进程是在哪个地方被挂起的——刚好在一个字节的 <em>int 3</em> 指令之后。</p>
+<p>最终，正如我们前面所解释的那样。为了让被调试进程重新继续执行，我们用原来的指令替换 <em>int 3</em> 指令并且让其 <em>$eip</em> 的值减1，然后重新运行被调试进程。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Remove the breakpoint by restoring the previous data</span><br><span class="line">** at the target address, and unwind the EIP back by 1 to</span><br><span class="line">** let the CPU execute the original instruction that was</span><br><span class="line">** there.</span><br><span class="line">*/</span></span><br><span class="line">ptrace(PTRACE_POKETEXT, child_pid, (<span class="keyword">void</span>*)addr, (<span class="keyword">void</span>*)data);</span><br><span class="line">regs.eip -= <span class="number">1</span>;</span><br><span class="line">ptrace(PTRACE_SETREGS, child_pid, <span class="number">0</span>, &amp;regs);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* The child can continue running now */</span></span><br><span class="line">ptrace(PTRACE_CONT, child_pid, <span class="number">0</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<p>这会让子进程打印“world！”并且退出，这正如我们所料。</p>
+<p>注意到在这里我们并没有恢复断点。那可以通过使用单步执行模式运行被调试的进程，然后将 <em>int 3</em> 指令放回原处，然后再通过 <strong>PTRACE_CONT</strong> 请求使被调试进程继续执行。文章后面部分将介绍的调试库实现了这一点。</p>
+<h3 id="更多关于-int-3-的秘密"><a href="#更多关于-int-3-的秘密" class="headerlink" title="更多关于 int 3 的秘密"></a>更多关于 <em>int 3</em> 的秘密</h3><p>现在是时候回过头来重新审视一下 <em>int 3</em> 以及Intel手册上那句有趣的解释了。再次引用一下它：</p>
+<blockquote>
+<p>This one byte form is valuable because it can be used to replace the first byte of any instruction with a breakpoint, including other one byte instructions, without over-writing other code</p>
+</blockquote>
+<p>在x86机器上 <em>int</em> 指令一般是占两个字节的—— <em>0xcd</em> 以及其后的8位的中断号。但是 <em>int 3</em> 是不能被加码为 <em>cd 03</em> 的，取而代之的是一个特殊的专门为它保留的指令—— <em>0xcc</em>。</p>
+<p>为什么会这样呢？因为它允许我们在任何指令的第一个字节设置断点，这不会影响到它后面的指令。这是非常重要的，考虑下面这一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">    .. some code ..</span><br><span class="line">    jz    foo</span><br><span class="line">    dec   eax</span><br><span class="line">foo:</span><br><span class="line">    call  bar</span><br><span class="line">    .. some code ..</span><br></pre></td></tr></table></figure>
+<p>假设我们想在 <em>dec eax</em> 处设置断点。这条指令正好对应着一个一字节指令（<em>0x48</em>）。假如我们使用一个超过一字节的断点指令去覆盖它，我们同样会覆盖掉它后面的一条指令（<em>call</em>），这可能会产生一些完全不合法的指令。如果执行了 <em>jz foo</em> 指令后，CPU并不会在断点处停下，并且会直接去执行后面的无效的指令。</p>
+<p>使用一个特殊的一字节指令作为 <em>int 3</em> 指令解决了这个问题。因为在x86机器上一字节指令是最短的指令，我们可以保证只有我们想要停住的位置的那条指令会改变。</p>
+<hr>
+<p>断点的设置原理上文已经介绍清楚。这篇文章剩下的几节不再准备翻译，是关于作者使用它写的调试库调试一个C程序的过程，有兴趣的读者可以移步<a href="http://eli.thegreenplace.net/2011/01/27/how-debuggers-work-part-2-breakpoints" target="_blank" rel="external">原文</a>继续阅读，或者在网上找寻其它的对这篇文章的翻译，相信你能找到许多；）</p>
 
       
     </div>
@@ -425,7 +437,7 @@
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2016/05/07/how-debugger-works-part-2-breakpoints/"
-           data-title="调试器工作原理：Part 1 － 基础" data-url="http://yoursite.com/2016/05/07/how-debugger-works-part-2-breakpoints/">
+           data-title="调试器工作原理：Part 2 － 断点" data-url="http://yoursite.com/2016/05/07/how-debugger-works-part-2-breakpoints/">
       </div>
     
   </div>
@@ -502,7 +514,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#在这一篇中"><span class="nav-number">1.</span> <span class="nav-text">在这一篇中</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#int-3——理论"><span class="nav-number">2.</span> <span class="nav-text">int 3——理论</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#int-3——实践"><span class="nav-number">3.</span> <span class="nav-text">int 3——实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#手动设置断点"><span class="nav-number">4.</span> <span class="nav-text">手动设置断点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在调试器中使用-int-3-设置断点"><span class="nav-number">5.</span> <span class="nav-text">在调试器中使用 int 3 设置断点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码"><span class="nav-number">6.</span> <span class="nav-text">代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结论和下一步"><span class="nav-number">7.</span> <span class="nav-text">结论和下一步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考文章"><span class="nav-number">8.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#在这一篇中"><span class="nav-number">1.</span> <span class="nav-text">在这一篇中</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#int-3——理论"><span class="nav-number">2.</span> <span class="nav-text">int 3——理论</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#int-3——实践"><span class="nav-number">3.</span> <span class="nav-text">int 3——实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#手动设置断点"><span class="nav-number">4.</span> <span class="nav-text">手动设置断点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在调试器中使用-int-3-设置断点"><span class="nav-number">5.</span> <span class="nav-text">在调试器中使用 int 3 设置断点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更多关于-int-3-的秘密"><span class="nav-number">6.</span> <span class="nav-text">更多关于 int 3 的秘密</span></a></li></ol></div>
             
           </div>
         </section>
