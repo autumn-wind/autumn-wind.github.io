@@ -94,7 +94,7 @@
 以下进入正文：
 
 这是关于“调试器原理系列文章”的第二篇。确保你在阅读这一篇前阅读过前一篇。">
-<meta property="og:updated_time" content="2016-05-07T15:31:51.000Z">
+<meta property="og:updated_time" content="2016-05-07T15:34:52.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="调试器工作原理：Part 2 － 断点">
 <meta name="twitter:description" content="这篇文章基本上是国外一篇博客的翻译，部分地方做了一定删改。
@@ -260,7 +260,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-07T23:31:51+08:00" content="2016-05-07">
+            <time itemprop="dateCreated" datetime="2016-05-07T23:34:52+08:00" content="2016-05-07">
               2016-05-07
             </time>
           </span>
@@ -357,7 +357,7 @@
 <p>假设我们想在 <em>dec eax</em> 处设置断点。这条指令正好对应着一个一字节指令（<em>0x48</em>）。假如我们使用一个超过一字节的断点指令去覆盖它，我们同样会覆盖掉它后面的一条指令（<em>call</em>），这可能会产生一些完全不合法的指令。如果执行了 <em>jz foo</em> 指令后，CPU并不会在断点处停下，并且会直接去执行后面的无效的指令。</p>
 <p>使用一个特殊的一字节指令作为 <em>int 3</em> 指令解决了这个问题。因为在x86机器上一字节指令是最短的指令，我们可以保证只有我们想要停住的位置的那条指令会改变。</p>
 <hr>
-<p>断点的设置原理上文已经介绍清楚。这篇文章剩下的几节不再准备翻译，是关于原文作者使用它写的调试库调试一个C程序的过程，有兴趣的读者可以移步<a href="http://eli.thegreenplace.net/2011/01/27/how-debuggers-work-part-2-breakpoints" target="_blank" rel="external">原文</a>继续阅读，或者在网上找寻其它的对这篇文章的翻译，相信你能找到许多；）</p>
+<p>断点的设置原理上文已经介绍清楚。这篇文章剩下的几节不再准备翻译，它们是关于原文作者使用它写的调试库调试一个C程序的过程，有兴趣的读者可以移步<a href="http://eli.thegreenplace.net/2011/01/27/how-debuggers-work-part-2-breakpoints" target="_blank" rel="external">原文</a>继续阅读，或者在网上找寻其它的对这篇文章的翻译，相信你能找到许多；）</p>
 
       
     </div>
