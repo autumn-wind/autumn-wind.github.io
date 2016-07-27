@@ -86,7 +86,7 @@
 <meta property="og:url" content="http://yoursite.com/2016/07/26/c_c++_notes/index.html">
 <meta property="og:site_name" content="归去来兮">
 <meta property="og:description" content="自己在学习与使用C/C++的过程中，遇到的一些问题。">
-<meta property="og:updated_time" content="2016-07-26T01:40:02.000Z">
+<meta property="og:updated_time" content="2016-07-27T08:17:25.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="C/C++ 查漏补缺">
 <meta name="twitter:description" content="自己在学习与使用C/C++的过程中，遇到的一些问题。">
@@ -306,13 +306,8 @@
 <li>char是signed还是unsigned取决于编译器的实现。</li>
 <li>strcat(char *dest, char *src); // 注意dest指向的字符串的结束位置，即’\0’出现的位置。</li>
 <li>printf和scanf中的格式转化说明与压入参数的大小，printf中”%f”对应的float类型参数会自动转化为double类型参数。</li>
-<li>当表达式中有无符号类型和有符号类型时，所有的操作数都自动转换为无符号类型。</li>
+<li>操作数的自动转换：<br>（1）当某个算数运算符有一个无符号类型操作数和一个有符号类型操作数时，则在开始运算之前有符号类型操作数会自动转换为无符号类型。<br>（2）当某个算数运算符有一个浮点型操作数和一个整型操作数时，则在开始运算之前整型操作数会自动转换为浮点型。</li>
 <li>关于volatile：<br>（1）首先强调一点，volatile和cache没有关系。因为cache对于编译器或者程序员来说是透明的，至于如何维护cache的一致性（多线程），或者使cpu的某些物理地址空间是不可缓存的（I/O），这都是cpu的事情，与编译器和volatile无关。<br>（2）指令集提供给编译器和程序员的接口中，编译器所能操纵的资源只有统一的物理地址空间和“单核”cpu的寄存器。volatile的作用是提醒编译器不要根据它所修饰的变量作出相应优化，原因是可能有“别的地方”会对这个变量进行读写。这里的别的地方包括——多线程、信号处理函数、I/O等等。所以说编译器需要在满足这个条件的前提下进行编译。于是编译器通常会像下面这样做：<br>＊不把这些变量放进寄存器，否则多线程会访问到不同cpu的寄存器，I/O则完全无法对cpu的寄存器进行读写。<br>＊不将某些循环随便优化成“只判断一次变量而进入死循环的形式”，而是“在每次进入循环体后都会去判断这个变量”。</li>
-</ol>
-<p>需要补充学习的：</p>
-<ol>
-<li>c++的虚表以及虚继承的原理（要会算sizeof的大小）</li>
-<li>c++的内存对象模型</li>
 </ol>
 
       
