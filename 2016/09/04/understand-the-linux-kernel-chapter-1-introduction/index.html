@@ -88,7 +88,7 @@
 <meta property="og:site_name" content="归去来兮">
 <meta property="og:description" content="这是“‘把书读薄’系列之《Understanding the Linux Kernel》”的第一篇。（注：本文讨论范围若未经特别说明，均和书籍一样，针对的是Linux 2.6.11版本）
 在这一篇中由于第一章主要是概论，并没有深入的探讨Linux的一些机制，所以我就只会列举一些通过这一章我学习到的，我认为对于Linux而言重要的或者容易忽视的特性，在需要的地方我会适当的展开讨论。">
-<meta property="og:updated_time" content="2016-09-04T02:18:21.000Z">
+<meta property="og:updated_time" content="2016-09-04T02:26:05.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="“把书读薄”系列之《Understanding the Linux Kernel》：Chapter 1 － Introduction">
 <meta name="twitter:description" content="这是“‘把书读薄’系列之《Understanding the Linux Kernel》”的第一篇。（注：本文讨论范围若未经特别说明，均和书籍一样，针对的是Linux 2.6.11版本）
@@ -251,7 +251,7 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-09-04T10:18:21+08:00" content="2016-09-04">
+            <time itemprop="dateCreated" datetime="2016-09-04T10:26:05+08:00" content="2016-09-04">
               2016-09-04
             </time>
           </span>
@@ -308,7 +308,7 @@
 <li>为什么单处理器不使用自旋锁的方式？（个人思考）<br>答：对于单处理器，使用semaphore的开销是“挂起＋唤醒进程”的时间，使用自旋锁的开销是“时间片＊n”（n的值等于其他进程释放这个资源前，等待这个自旋锁的进程获得了几次cpu），相比较而言前者时间通常更短。</li>
 <li>Linux的进程间通信方式：信号，管道，有名管道，消息队列，信号量，共享内存。</li>
 <li>Linux的进程是既知道其父进程也知道其子进程的。（进程描述符中有记录）</li>
-<li>在一个进程终止后，而在它的父进程调用<em>wait()</em>类系统调用前，这个进程被称作zombie进程，它的进程描述符依然残留在内存里，这么做是为了父进程能对其中的一些信息进行检查。</li>
+<li>在一个进程终止后，而在它的父进程调用<em>wait()</em>类系统调用前，这个进程被称作zombie进程，它的进程描述符依然残留在内存里，这么做是为了父进程能对其中的一些信息进行检查。之后当父进程执行<em>wait()</em>类系统调用时，才会回收已退出的子进程的进程描述符，此时这些子进程由EXIT_ZOMBIE状态变为EXIT_DEAD状态。</li>
 <li>若某个父进程没有执行<em>wait()</em>类系统调用就退出，则内核会让这个父进程的子进程成为<em>init</em>进程的子进程，防止系统中残留大量的zombie进程。</li>
 <li>每个设备文件对应一个特定的设备驱动。</li>
 </ol>
