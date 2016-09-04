@@ -84,11 +84,11 @@
 在这一篇中由于第一章主要是概论，并没有深入的探讨Linux的一些机制，所以我就只会列举一些通过这一章我学习到的，我认为对于Linux而言重要的或者容易忽视的特性，在需要的地方我会适当的展开讨论。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="“把书读薄”系列之《Understanding the Linux Kernel》：Chapter 1 － Introduction">
-<meta property="og:url" content="http://yoursite.com/2016/06/09/understand-the-linux-kernel-chapter-1-introduction/index.html">
+<meta property="og:url" content="http://yoursite.com/2016/09/04/understand-the-linux-kernel-chapter-1-introduction/index.html">
 <meta property="og:site_name" content="归去来兮">
 <meta property="og:description" content="这是“‘把书读薄’系列之《Understanding the Linux Kernel》”的第一篇。（注：本文讨论范围若未经特别说明，均和书籍一样，针对的是Linux 2.6.11版本）
 在这一篇中由于第一章主要是概论，并没有深入的探讨Linux的一些机制，所以我就只会列举一些通过这一章我学习到的，我认为对于Linux而言重要的或者容易忽视的特性，在需要的地方我会适当的展开讨论。">
-<meta property="og:updated_time" content="2016-06-09T09:36:24.000Z">
+<meta property="og:updated_time" content="2016-09-04T02:18:21.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="“把书读薄”系列之《Understanding the Linux Kernel》：Chapter 1 － Introduction">
 <meta name="twitter:description" content="这是“‘把书读薄’系列之《Understanding the Linux Kernel》”的第一篇。（注：本文讨论范围若未经特别说明，均和书籍一样，针对的是Linux 2.6.11版本）
@@ -251,8 +251,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-06-09T17:36:24+08:00" content="2016-06-09">
-              2016-06-09
+            <time itemprop="dateCreated" datetime="2016-09-04T10:18:21+08:00" content="2016-09-04">
+              2016-09-04
             </time>
           </span>
 
@@ -262,8 +262,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/06/09/understand-the-linux-kernel-chapter-1-introduction/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/09/understand-the-linux-kernel-chapter-1-introduction/" itemprop="commentsCount"></span>
+                <a href="/2016/09/04/understand-the-linux-kernel-chapter-1-introduction/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/04/understand-the-linux-kernel-chapter-1-introduction/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -297,18 +297,18 @@
 <li>Linux在文件系统上又加了一层“虚拟文件系统”，可以让Linux轻松的挂载各种不同的文件系统。</li>
 <li>Linux从2.6开始<strong>不再</strong>遵从中间的数字是偶数则是稳定版本，是奇数则为开发中版本。</li>
 <li>每个文件都只属于一个user和一个group。</li>
-<li>微内核的优缺点：<br>优点：<br> 1.迫使系统编程者采用模块化的方法，产生定义良好的程序接口。<br> 2.移植性更好，因为对于所有硬件依赖的组件可以单独放置到微内核代码中。<br> 3.内存使用效率更高，不需要的系统进程可以终止，从而释放内存空间。<br>缺点：<br> 1.进程间通信有开销（这也是为什么Linux依然采用宏内核的原因）</li>
+<li>微内核的优缺点：<br>优点：<br> 1.迫使系统编程者采用模块化的方法，产生定义良好的程序接口。<br> 2.移植性更好，因为对于所有硬件依赖的组件可以单独放置到微内核代码中。<br> 3.内存使用效率更高，不需要的系统进程可以终止，从而释放内存空间。<br>缺点：<br> 1.进程间通信有开销（这也是为什么Linux依然采用宏内核的原因）<br> 2.并发度存在瓶颈。</li>
 <li>Linux依靠LKM同样可以近似实现微内核上述三个优点。</li>
-<li>不能为文件夹创建硬链接，否则有可能会使目录树变成一个环形图，这样会造成没办法通过一个文件的名字定位到它。（暂时没太弄明白）</li>
+<li>不能为文件夹创建硬链接，否则有可能会使目录树变成一个环形图，这样会导致一些bug，比如在执行find命令时，会陷入死循环。</li>
 <li>硬链接只能在同一个文件系统中创建。</li>
 <li>Linux将文件的信息和文件的内容区分开来，Linux为每个文件分配了一个inode用以表示这个文件的相关信息。</li>
 <li>Linux内核是可重入的（见上述第4条），<strong>这是很重要的</strong>——这会让内核及时响应外设发出的中断，使外设在中断被响应后能继续做其他的事情。</li>
 <li>Linux靠信号量和上锁来实现同步。为了防止死锁，Linux只允许进程<strong>按序申请资源</strong>。</li>
 <li>Linux使用自旋锁来解决多处理器间的临界资源访问问题。自旋锁和信号量类似，只是没有等待队列，因为它并不是通过挂起进程，而是通过使进程不断执行一个紧凑的循环来使进程等待，直到等待的资源被别的处理器释放。</li>
-<li>为什么单处理器不使用自旋锁的方式？（个人思考）<br>答：对于单处理器，使用semaphore的开销是“挂起＋唤醒进程”的时间，使用自旋锁的开销是“时间片＊n”（n取决于其他进程花多久才能释放这个资源），相比较而言前者时间通常更短。</li>
+<li>为什么单处理器不使用自旋锁的方式？（个人思考）<br>答：对于单处理器，使用semaphore的开销是“挂起＋唤醒进程”的时间，使用自旋锁的开销是“时间片＊n”（n的值等于其他进程释放这个资源前，等待这个自旋锁的进程获得了几次cpu），相比较而言前者时间通常更短。</li>
 <li>Linux的进程间通信方式：信号，管道，有名管道，消息队列，信号量，共享内存。</li>
 <li>Linux的进程是既知道其父进程也知道其子进程的。（进程描述符中有记录）</li>
-<li>在一个进程终止后，而在它的父进程调用<em>wait()</em>类系统调用前，这个进程被称作zombie进程，它的进程描述符依然残留在内存里。</li>
+<li>在一个进程终止后，而在它的父进程调用<em>wait()</em>类系统调用前，这个进程被称作zombie进程，它的进程描述符依然残留在内存里，这么做是为了父进程能对其中的一些信息进行检查。</li>
 <li>若某个父进程没有执行<em>wait()</em>类系统调用就退出，则内核会让这个父进程的子进程成为<em>init</em>进程的子进程，防止系统中残留大量的zombie进程。</li>
 <li>每个设备文件对应一个特定的设备驱动。</li>
 </ol>
@@ -335,17 +335,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/05/07/how-debugger-works-part-2-breakpoints/" rel="next" title="调试器工作原理：Part 2 － 断点">
-                <i class="fa fa-chevron-left"></i> 调试器工作原理：Part 2 － 断点
+              <a href="/2016/07/26/c_c++_notes/" rel="next" title="C/C++ 查漏补缺">
+                <i class="fa fa-chevron-left"></i> C/C++ 查漏补缺
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/07/11/x86-x64-ia32-ia64/" rel="prev" title="一些概念：x86、x64、IA32、IA64">
-                一些概念：x86、x64、IA32、IA64 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -394,8 +390,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/06/09/understand-the-linux-kernel-chapter-1-introduction/"
-           data-title="“把书读薄”系列之《Understanding the Linux Kernel》：Chapter 1 － Introduction" data-url="http://yoursite.com/2016/06/09/understand-the-linux-kernel-chapter-1-introduction/">
+      <div class="ds-thread" data-thread-key="2016/09/04/understand-the-linux-kernel-chapter-1-introduction/"
+           data-title="“把书读薄”系列之《Understanding the Linux Kernel》：Chapter 1 － Introduction" data-url="http://yoursite.com/2016/09/04/understand-the-linux-kernel-chapter-1-introduction/">
       </div>
     
   </div>
